@@ -47,11 +47,39 @@ public class ThreadedSearch<T> implements Runnable {
     * threads, wait for them to all terminate, and then return the answer
     * in the shared `Answer` instance.
     */
-    return false;
+    
+    // Create the shared instance of `Answer` and variables to determine the section to search
+    Answer sharedAnswer = new Answer();
+    int elementsPerSection = list.size() / numThreads;
+    int currentStart = 0;
+    
+    // Create the array of threads, create numThreads instances of the ThreadedSearch class, and store them in the array
+    Thread[] threads = new Thread[numThreads];
+    for (int i=0; i<numThreads; i++) {
+    	ThreadedSearch runnable = new ThreadedSearch(target, list, currentStart, currentStart + elementsPerSection, sharedAnswer);
+	Thread currentThread = new Thread(runnable);
+	threads[i] = currentThread;	
+	currentStart += elementsPerSection;
+    }    
+    // Start each thread via it's run method
+    for (int i=0; i<numThreads; i++) {
+    	threads[i].start();	    
+    }
+    // Wait for each thread to complete 
+    for (int i=0; i<numThreads; i++) {
+    	threads[i].join();
+    }
+    // Return the shared answer 
+    return sharedAnswer.getAnswer();
   }
 
+  // Search the section given to the current thread
   public void run() {
-
+    for (int i=begin; i<end; i++) {
+    	if (list.get(i).equals(target)) {
+	    answer.setAnswer(true);
+	}
+    }	
   }
 
   private class Answer {
